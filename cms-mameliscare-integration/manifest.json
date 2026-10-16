@@ -1,0 +1,125 @@
+{
+  "formatVersion": "1.0.0",
+  "tenant": {
+    "name": "Mamelis Care",
+    "slug": "mameliscare",
+    "defaultLocale": "en",
+    "locales": [
+      "en"
+    ]
+  },
+  "models": [
+    {
+      "id": "1ae7796c-ac8d-4360-b643-acd145388be7",
+      "name": "Menu",
+      "slug": "menu",
+      "status": "active",
+      "fields": [
+        {
+          "key": "internal_name",
+          "label": "internal Name",
+          "type": "text",
+          "required": true,
+          "isList": false,
+          "isTitle": true,
+          "localized": false,
+          "config": {},
+          "targetModelIds": []
+        },
+        {
+          "key": "items",
+          "label": "items",
+          "type": "component",
+          "required": false,
+          "isList": true,
+          "isTitle": false,
+          "localized": false,
+          "config": {
+            "isList": true,
+            "targetModelSlugs": [
+              "page"
+            ]
+          },
+          "targetModelIds": [
+            "bf45584e-7868-4b02-b431-9d2f3604d6c1"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bf45584e-7868-4b02-b431-9d2f3604d6c1",
+      "name": "Page",
+      "slug": "page",
+      "status": "active",
+      "fields": [
+        {
+          "key": "title",
+          "label": "Title",
+          "type": "text",
+          "required": true,
+          "isList": false,
+          "isTitle": true,
+          "localized": false,
+          "config": {},
+          "targetModelIds": []
+        },
+        {
+          "key": "slug",
+          "label": "slug",
+          "type": "slug",
+          "required": true,
+          "isList": false,
+          "isTitle": false,
+          "localized": false,
+          "config": {
+            "unique": true
+          },
+          "targetModelIds": []
+        },
+        {
+          "key": "content",
+          "label": "Content",
+          "type": "rich_text",
+          "required": false,
+          "isList": false,
+          "isTitle": false,
+          "localized": false,
+          "config": {
+            "richText": {
+              "code": true,
+              "links": true,
+              "lists": true,
+              "media": true,
+              "quotes": true,
+              "headings": true
+            }
+          },
+          "targetModelIds": []
+        },
+        {
+          "key": "cover_image",
+          "label": "Cover Image",
+          "type": "asset",
+          "required": false,
+          "isList": false,
+          "isTitle": false,
+          "localized": false,
+          "config": {
+            "allowedTypes": [
+              "image"
+            ]
+          },
+          "targetModelIds": []
+        }
+      ]
+    }
+  ],
+  "schemaHash": "02cf436008d9f72309fbb264bd643060f8e080d290c6ad74fbdefb3b79909a39",
+  "generatedAt": "2026-10-16T18:22:42.633Z",
+  "origin": "https://cms.fourd.nl",
+  "revalidation": {
+    "configured": false,
+    "url": null
+  },
+  "examplesAreSynthetic": true
+}

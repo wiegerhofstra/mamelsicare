@@ -1,0 +1,552 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mamelis Care — delivered CMS entries",
+  "x-cms-schemaHash": "02cf436008d9f72309fbb264bd643060f8e080d290c6ad74fbdefb3b79909a39",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/Entry_1ae7796cac8d4360b643acd145388be7"
+    },
+    {
+      "$ref": "#/$defs/Entry_bf45584e78684b02b4319d2f3604d6c1"
+    }
+  ],
+  "$defs": {
+    "EntryReference": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "modelId": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "id",
+        "modelId"
+      ],
+      "additionalProperties": false
+    },
+    "Asset": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "originalName": {
+          "type": "string"
+        },
+        "mimeType": {
+          "type": "string"
+        },
+        "sizeBytes": {
+          "type": "integer"
+        },
+        "imageWidth": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "imageHeight": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Presigned read URL. Expires 300 seconds after issuance. Fetch fresh content to renew it."
+        }
+      },
+      "required": [
+        "id",
+        "originalName",
+        "mimeType",
+        "sizeBytes",
+        "imageWidth",
+        "imageHeight",
+        "url"
+      ]
+    },
+    "RichTextNode": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "content": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/RichTextNode"
+          }
+        },
+        "attrs": {
+          "type": "object",
+          "properties": {
+            "assetId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "asset": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Asset"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "marks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string"
+              },
+              "attrs": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "description": "Expected Tiptap JSON node shape. Raw legacy rich-text values are not validated by delivery. Asset nodes retain attrs.assetId and add attrs.asset (object or null)."
+    },
+    "Entry": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "modelId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "status": {
+          "const": "published",
+          "type": "string"
+        },
+        "data": {
+          "type": "object"
+        },
+        "publishedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "modelId",
+        "status",
+        "data",
+        "publishedAt",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Model": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "archived"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "slug",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Field": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "key": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "text",
+            "rich_text",
+            "url",
+            "number",
+            "boolean",
+            "date",
+            "time",
+            "enum",
+            "asset",
+            "component",
+            "slug"
+          ]
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "position": {
+          "type": "integer"
+        },
+        "config": {
+          "type": "object"
+        },
+        "isList": {
+          "type": "boolean"
+        },
+        "isTitle": {
+          "type": "boolean"
+        },
+        "localized": {
+          "type": "boolean"
+        },
+        "targetModelIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "key",
+        "label",
+        "type",
+        "required",
+        "position",
+        "config",
+        "isList",
+        "isTitle",
+        "localized",
+        "targetModelIds"
+      ]
+    },
+    "ModelDetail": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Model"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Field"
+              }
+            }
+          },
+          "required": [
+            "fields"
+          ]
+        }
+      ]
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "enum": [
+                "BAD_REQUEST",
+                "UNAUTHORIZED",
+                "FORBIDDEN",
+                "NOT_FOUND",
+                "INTERNAL_SERVER_ERROR"
+              ]
+            },
+            "message": {
+              "type": "string"
+            },
+            "requestId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "code",
+            "message",
+            "requestId"
+          ]
+        }
+      },
+      "required": [
+        "error"
+      ]
+    },
+    "Entry_1ae7796cac8d4360b643acd145388be7": {
+      "title": "Menu",
+      "x-cms-modelSlug": "menu",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Entry"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "modelId": {
+              "const": "1ae7796c-ac8d-4360-b643-acd145388be7",
+              "type": "string"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "internal_name": {
+                  "title": "internal Name",
+                  "description": "text field: internal_name",
+                  "x-cms-fieldType": "text",
+                  "x-cms-requiredForPublish": true,
+                  "x-cms-isTitle": true,
+                  "x-cms-isList": false,
+                  "x-cms-localized": false,
+                  "x-cms-config": {},
+                  "x-cms-targetModels": [],
+                  "x-cms-editorSchema": {
+                    "type": "string"
+                  }
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "allOf": [
+                          {
+                            "$ref": "#/$defs/EntryReference"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "modelId": {
+                                "enum": [
+                                  "bf45584e-7868-4b02-b431-9d2f3604d6c1"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "modelId"
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "$ref": "#/$defs/Entry_bf45584e78684b02b4319d2f3604d6c1"
+                      }
+                    ]
+                  },
+                  "title": "items",
+                  "description": "component field: items",
+                  "x-cms-fieldType": "component",
+                  "x-cms-requiredForPublish": false,
+                  "x-cms-isTitle": false,
+                  "x-cms-isList": true,
+                  "x-cms-localized": false,
+                  "x-cms-config": {
+                    "isList": true,
+                    "targetModelSlugs": [
+                      "page"
+                    ]
+                  },
+                  "x-cms-targetModels": [
+                    {
+                      "id": "bf45584e-7868-4b02-b431-9d2f3604d6c1",
+                      "slug": "page"
+                    }
+                  ]
+                }
+              },
+              "required": [],
+              "description": "Fields may be absent after model edits. Unknown/stale keys are retained. Raw fields follow editor intent but delivery does not enforce primitive types or enum membership. Validate before rendering.",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "modelId",
+            "data"
+          ]
+        }
+      ]
+    },
+    "Entry_bf45584e78684b02b4319d2f3604d6c1": {
+      "title": "Page",
+      "x-cms-modelSlug": "page",
+      "allOf": [
+        {
+          "$ref": "#/$defs/Entry"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "modelId": {
+              "const": "bf45584e-7868-4b02-b431-9d2f3604d6c1",
+              "type": "string"
+            },
+            "data": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "title": "Title",
+                  "description": "text field: title",
+                  "x-cms-fieldType": "text",
+                  "x-cms-requiredForPublish": true,
+                  "x-cms-isTitle": true,
+                  "x-cms-isList": false,
+                  "x-cms-localized": false,
+                  "x-cms-config": {},
+                  "x-cms-targetModels": [],
+                  "x-cms-editorSchema": {
+                    "type": "string"
+                  }
+                },
+                "slug": {
+                  "title": "slug",
+                  "description": "slug field: slug",
+                  "x-cms-fieldType": "slug",
+                  "x-cms-requiredForPublish": true,
+                  "x-cms-isTitle": false,
+                  "x-cms-isList": false,
+                  "x-cms-localized": false,
+                  "x-cms-config": {
+                    "unique": true
+                  },
+                  "x-cms-targetModels": [],
+                  "x-cms-editorSchema": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9_-]+$"
+                  }
+                },
+                "content": {
+                  "title": "Content",
+                  "description": "rich_text field: content",
+                  "x-cms-fieldType": "rich_text",
+                  "x-cms-requiredForPublish": false,
+                  "x-cms-isTitle": false,
+                  "x-cms-isList": false,
+                  "x-cms-localized": false,
+                  "x-cms-config": {
+                    "richText": {
+                      "code": true,
+                      "links": true,
+                      "lists": true,
+                      "media": true,
+                      "quotes": true,
+                      "headings": true
+                    }
+                  },
+                  "x-cms-targetModels": [],
+                  "x-cms-editorSchema": {
+                    "$ref": "#/$defs/RichTextNode"
+                  }
+                },
+                "cover_image": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Asset"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Cover Image",
+                  "description": "asset field: cover_image",
+                  "x-cms-fieldType": "asset",
+                  "x-cms-requiredForPublish": false,
+                  "x-cms-isTitle": false,
+                  "x-cms-isList": false,
+                  "x-cms-localized": false,
+                  "x-cms-config": {
+                    "allowedTypes": [
+                      "image"
+                    ]
+                  },
+                  "x-cms-targetModels": []
+                }
+              },
+              "required": [],
+              "description": "Fields may be absent after model edits. Unknown/stale keys are retained. Raw fields follow editor intent but delivery does not enforce primitive types or enum membership. Validate before rendering.",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "modelId",
+            "data"
+          ]
+        }
+      ]
+    }
+  }
+}

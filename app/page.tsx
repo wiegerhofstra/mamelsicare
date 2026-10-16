@@ -1,69 +1,210 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Suspense } from "react";
+import { CmsImage } from "@/components/cms-image";
+import { Icon } from "@/components/icon";
+import { RichText } from "@/components/rich-text";
+import { ContactBanner } from "@/components/site-shell";
+import { getSiteContent } from "@/lib/cms/data";
+import { pageHref, type Page } from "@/lib/cms/content";
+
+export const metadata = { alternates: { canonical: "/" } };
+
+const careDescriptions: Record<string, string> = {
+  eerstelijnsverblijf:
+    "Tijdelijk de verzorging en begeleiding die u nodig heeft, met uw herstel en terugkeer naar huis voorop.",
+  respijtzorg:
+    "Vertrouwde zorg voor uw naaste, zodat u als mantelzorger even tijd voor uzelf heeft.",
+};
+
+function CareCard({ page }: { page: Page }) {
+  return (
+    <Link href={pageHref(page.slug)} className="care-card">
+      {page.image && (
+        <div className="care-image">
+          <CmsImage image={page.image} sizes="(max-width: 700px) 100vw, 50vw" />
+        </div>
+      )}
+      <div className="care-card-body">
+        <div>
+          <h3>{page.title}</h3>
+          <p>{careDescriptions[page.slug]}</p>
+        </div>
+        <span className="round-arrow">
+          <Icon name="arrow" />
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+async function HomeContent() {
+  const { pages } = await getSiteContent();
+  const home = pages.find((p) => p.slug === "home");
+  const patients = pages.find((p) => p.slug === "informatie-voor-patienten");
+  const referrers = pages.find((p) => p.slug === "informatie-voor-verwijzers");
+  const care = ["eerstelijnsverblijf", "respijtzorg"].flatMap((slug) =>
+    pages.filter((p) => p.slug === slug),
+  );
+  return (
+    <main id="main">
+      <section className="hero" aria-labelledby="hero-heading">
+        <div className="hero-copy">
+          <span className="location-label">
+            <Icon name="pin" />
+            Welkom bij Mamelis Care in Vijlen
+          </span>
+          <h1 id="hero-heading">
+            Alle aandacht.
+            <br />
+            Voor uw herstel.
+          </h1>
+          {home?.content.length ? (
+            <RichText nodes={home.content.slice(0, 1)} className="hero-intro" />
+          ) : (
+            <p className="hero-intro">
+              Kortdurende zorg in een persoonlijke, huiselijke omgeving.
+            </p>
+          )}
+          <div className="hero-actions">
+            <a className="button button-primary" href="#onze-zorg">
+              Ontdek onze zorg
+              <Icon name="arrow" />
+            </a>
+            <Link href="/contact" className="text-link">
+              Neem contact op
+            </Link>
+          </div>
+        </div>
+        <div className="hero-visual">
+          {home?.image && (
+            <CmsImage
+              image={home.image}
+              alt="Het gebouw en terras van Mamelis Care in Vijlen"
+              sizes="(max-width: 800px) 100vw, 55vw"
+              preload
+            />
+          )}
+          <div className="photo-caption">
+            <Icon name="home" />
+            <span>
+              Een vertrouwde plek.
+              <br />
+              <strong>Even tussen ziekenhuis en thuis.</strong>
+            </span>
+          </div>
+        </div>
+      </section>
+      <section
+        className="audience-section container"
+        aria-labelledby="audience-heading"
+      >
+        <h2 id="audience-heading" className="visually-hidden">
+          Waar kunnen we u mee helpen?
+        </h2>
+        <a href="#onze-zorg" className="audience-link">
+          <Icon name="heart" />
+          <div>
+            <h3>Ik zoek zorg</h3>
+            <p>Welke zorg past bij uw situatie?</p>
+          </div>
+          <Icon name="arrow" />
+        </a>
+        {patients && (
+          <Link href={pageHref(patients.slug)} className="audience-link">
+            <Icon name="home" />
+            <div>
+              <h3>Voor patiënten & naasten</h3>
+              <p>Alles over uw verblijf en bezoek.</p>
+            </div>
+            <Icon name="arrow" />
+          </Link>
+        )}
+        {referrers && (
+          <Link href={pageHref(referrers.slug)} className="audience-link">
+            <Icon name="people" />
+            <div>
+              <h3>Ik ben verwijzer</h3>
+              <p>Informatie en direct aanmelden.</p>
+            </div>
+            <Icon name="arrow" />
+          </Link>
+        )}
+      </section>
+      <section
+        className="section container care-section"
+        id="onze-zorg"
+        aria-labelledby="care-heading"
+      >
+        <div className="section-heading">
+          <h2 id="care-heading">
+            Goede zorg begint
+            <br />
+            met aandacht voor u.
+          </h2>
+          <p>
+            Soms is thuis zijn even niet mogelijk.
+            <br />
+            Dan zijn wij er voor u, met deskundige zorg
+            <br className="desktop-break" /> en de tijd om aan te sterken.
+          </p>
+        </div>
+        <div className="care-grid">
+          {care.map((page) => (
+            <CareCard page={page} key={page.id} />
+          ))}
+        </div>
+      </section>
+      <section className="about-section" aria-labelledby="about-heading">
+        <div className="container about-grid">
+          <div className="about-visual">
+            {patients?.image && (
+              <CmsImage
+                image={patients.image}
+                alt="De lichte gezamenlijke woonkamer van Mamelis Care"
+                sizes="(max-width: 800px) 100vw, 50vw"
+              />
+            )}
+            <div className="about-note">
+              <Icon name="heart" />
+              <span>
+                Kleinschalig.
+                <br />
+                Met ruimte voor u.
+              </span>
+            </div>
+          </div>
+          <div className="about-copy">
+            <h2 id="about-heading">
+              Bij ons gaat het
+              <br />
+              om mensen.
+            </h2>
+            {home && <RichText nodes={home.content.slice(1)} />}
+            {patients && (
+              <Link className="text-link" href={pageHref(patients.slug)}>
+                Meer over uw verblijf
+                <Icon name="arrow" />
+              </Link>
+            )}
+          </div>
+        </div>
+      </section>
+      <ContactBanner />
+    </main>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <Suspense
+      fallback={
+        <main id="main" className="container loading-page" role="status">
+          <div className="loading-line" />
+          <p>De pagina wordt geladen…</p>
+        </main>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }
