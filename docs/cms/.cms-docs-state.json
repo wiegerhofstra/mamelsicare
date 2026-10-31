@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "source": "https://cms.fourd.nl/api/integration/mameliscare/v1",
+  "contentHash": "df57825da21048db16a4bfc0d79fc764d5023861aae962b11a41c3b9ec8c5e51",
+  "files": {
+    "INTEGRATION.md": "26187cd7f86478f49ab788833147f8e17618dd0b0746c8ad1af9ac0808544c5b",
+    "client.ts": "84f180cfa3f60acddf9c636116bcd3bbf1b6073d9a31968826fa541221056221",
+    "examples/astro-pages.astro": "5ecea02278eed1527411b2d4bbcb12cbe674ba971f2bac94c717ac8b027e9ed5",
+    "examples/astro.config.mjs": "8cc874cd790133ccf619f50ada404d3b52839f306661f1eae15207355f0af2e8",
+    "examples/responses.json": "0853ddfa5e2d84e742be2cecca0a458c9bda7b8be1e5b35e06bf6252f2ae67f8",
+    "examples/usage.ts": "35c9cc127ba6b1d4b377af333d1839241b881d5cb18f180e2f433e5837e5b065",
+    "manifest.json": "1edb55e652ad8be9f90c6791ef96702bc217df95c06266f8321d7b4d054218ad",
+    "models.schema.json": "13eb75551a0b16085ba9eba836232d4bbb667947daf315786a2592109cd75a2c",
+    "openapi.json": "8f3824fa4b7ecf0684016ce11759db804010810b94edf7fe0bb0957b57992409",
+    "rich-text.ts": "c27f53024616f3ce1c04a4db96f9cff72776d1226ba61f9f65128dada8e15925",
+    "types.ts": "6d5cfcb4c38b14ec89797dddc7cc6efb64d2018cbade5d248021e835384e5c54"
+  }
+}

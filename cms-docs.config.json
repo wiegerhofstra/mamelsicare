@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "origin": "https://cms.fourd.nl",
+  "tenantSlug": "mameliscare",
+  "tokenEnv": "CMS_ACCESS_TOKEN",
+  "output": "docs/cms",
+  "envFiles": [
+    ".env",
+    ".env.local"
+  ]
+}

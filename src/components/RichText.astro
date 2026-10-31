@@ -1,0 +1,8 @@
+---
+import type { ContentNode } from "../lib/cms/content";
+import { renderRichText } from "../lib/cms/rich-text";
+interface Props { nodes: ContentNode[]; class?: string }
+const { nodes, class: className = "" } = Astro.props;
+const html = renderRichText({ type: "doc", content: nodes });
+---
+<div class={`prose ${className}`} set:html={html} />

@@ -1,0 +1,162 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getSiteContent } from "../lib/cms/data";
+import CmsImage from "../components/CmsImage.astro";
+import Icon from "../components/Icon.astro";
+import RichText from "../components/RichText.astro";
+import ContactBanner from "../components/ContactBanner.astro";
+import CareCard from "../components/CareCard.astro";
+const { pages } = await getSiteContent();
+const contact = pages.find((page) => page.slug === "contact");
+  const home = pages.find((p) => p.href === "/");
+  const patients = pages.find((p) => p.slug === "informatie-voor-patienten");
+  const referrers = pages.find((p) => p.slug === "informatie-voor-verwijzers");
+  const care = ["eerstelijnsverblijf", "respijtzorg"].flatMap((slug) =>
+    pages.filter((p) => p.slug === slug),
+  );
+---
+<Layout>
+<main id="main">
+      <section class="hero" aria-labelledby="hero-heading">
+        <div class="hero-copy">
+          <span class="location-label">
+            <Icon name="pin" />
+            Welkom bij Mamelis Care in Vijlen
+          </span>
+          <h1 id="hero-heading">
+            Alle aandacht.
+            <br />
+            Voor uw herstel.
+          </h1>
+          {home?.content.length ? (
+            <RichText nodes={home.content.slice(0, 1)} class="hero-intro" />
+          ) : (
+            <p class="hero-intro">
+              Kortdurende zorg in een persoonlijke, huiselijke omgeving.
+            </p>
+          )}
+          <div class="hero-actions">
+            <a class="button button-primary" href="#onze-zorg">
+              Ontdek onze zorg
+              <Icon name="arrow" />
+            </a>
+            {contact && <a href={contact.href} class="text-link">
+              Neem contact op
+            </a>}
+          </div>
+        </div>
+        <div class="hero-visual">
+          {home?.image && (
+            <CmsImage
+              image={home.image}
+              alt="Het gebouw en terras van Mamelis Care in Vijlen"
+              preload
+            />
+          )}
+          <div class="photo-caption">
+            <Icon name="home" />
+            <span>
+              Een vertrouwde plek.
+              <br />
+              <strong>Even tussen ziekenhuis en thuis.</strong>
+            </span>
+          </div>
+        </div>
+      </section>
+      <section
+        class="audience-section container"
+        aria-labelledby="audience-heading"
+      >
+        <h2 id="audience-heading" class="visually-hidden">
+          Waar kunnen we u mee helpen?
+        </h2>
+        <a href="#onze-zorg" class="audience-link">
+          <Icon name="heart" />
+          <div>
+            <h3>Ik zoek zorg</h3>
+            <p>Welke zorg past bij uw situatie?</p>
+          </div>
+          <Icon name="arrow" />
+        </a>
+        {patients && (
+          <a href={patients.href} class="audience-link">
+            <Icon name="home" />
+            <div>
+              <h3>Voor patiënten & naasten</h3>
+              <p>Alles over uw verblijf en bezoek.</p>
+            </div>
+            <Icon name="arrow" />
+          </a>
+        )}
+        {referrers && (
+          <a href={referrers.href} class="audience-link">
+            <Icon name="people" />
+            <div>
+              <h3>Ik ben verwijzer</h3>
+              <p>Informatie en direct aanmelden.</p>
+            </div>
+            <Icon name="arrow" />
+          </a>
+        )}
+      </section>
+      <section
+        class="section container care-section"
+        id="onze-zorg"
+        aria-labelledby="care-heading"
+      >
+        <div class="section-heading">
+          <h2 id="care-heading">
+            Goede zorg begint
+            <br />
+            met aandacht voor u.
+          </h2>
+          <p>
+            Soms is thuis zijn even niet mogelijk.
+            <br />
+            Dan zijn wij er voor u, met deskundige zorg
+            <br class="desktop-break" /> en de tijd om aan te sterken.
+          </p>
+        </div>
+        <div class="care-grid">
+          {care.map((page) => (
+            <CareCard page={page} />
+          ))}
+        </div>
+      </section>
+      <section class="about-section" aria-labelledby="about-heading">
+        <div class="container about-grid">
+          <div class="about-visual">
+            {patients?.image && (
+              <CmsImage
+                image={patients.image}
+                alt="De lichte gezamenlijke woonkamer van Mamelis Care"
+              />
+            )}
+            <div class="about-note">
+              <Icon name="heart" />
+              <span>
+                Kleinschalig.
+                <br />
+                Met ruimte voor u.
+              </span>
+            </div>
+          </div>
+          <div class="about-copy">
+            <h2 id="about-heading">
+              Bij ons gaat het
+              <br />
+              om mensen.
+            </h2>
+            {home && <RichText nodes={home.content.slice(1)} />}
+            {patients && (
+              <a class="text-link" href={patients.href}>
+                Meer over uw verblijf
+                <Icon name="arrow" />
+              </a>
+            )}
+          </div>
+        </div>
+      </section>
+      <ContactBanner />
+    </main>
+</Layout>

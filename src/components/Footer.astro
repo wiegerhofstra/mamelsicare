@@ -1,0 +1,60 @@
+---
+import { site } from "../lib/site";
+import { getSiteContent } from "../lib/cms/data";
+const { pages } = await getSiteContent();
+const contact = pages.find((page) => page.slug === "contact");
+---
+<footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <img src="/logo.svg" width={180} height={82} alt="Mamelis Care" />
+            <p>
+              Persoonlijke zorg.
+              <br />
+              Een vertrouwde omgeving.
+            </p>
+          </div>
+          <div>
+            <h2>U vindt ons in Vijlen</h2>
+            <address>
+              {site.address}
+              <br />
+              {site.city}
+            </address>
+            {contact && <a href={contact.href} class="footer-link">
+              Contact & bereikbaarheid
+            </a>}
+          </div>
+          <div>
+            <h2>Neem contact op</h2>
+            <a href={site.phoneHref}>{site.phone}</a>
+            <a href={`mailto:${site.email}`}>{site.email}</a>
+            <a href={`mailto:${site.referralEmail}`}>Een patiënt aanmelden</a>
+          </div>
+          <div>
+            <h2>Goed om te weten</h2>
+            {pages
+              .filter((p) =>
+                [
+                  "informatie-voor-patienten",
+                  "informatie-voor-verwijzers",
+                  "wnt",
+                ].includes(p.slug),
+              )
+              .map((p) => (
+                <a href={p.href}>
+                  {p.title === "WNT" ? "WNT-verantwoording" : p.title}
+                </a>
+              ))}
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>© Mamelis Care</span>
+          <span>
+            Privacy- en beleidsverklaring op te vragen via{" "}
+            <a href={`mailto:${site.email}`}>e-mail</a>
+          </span>
+        </div>
+      </div>
+    </footer>

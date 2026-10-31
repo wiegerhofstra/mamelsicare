@@ -1,0 +1,128 @@
+---
+import type { GetStaticPaths } from "astro";
+import Layout from "../layouts/Layout.astro";
+import { getSiteContent } from "../lib/cms/data";
+import { faqSections, plainText, type Page } from "../lib/cms/content";
+import { site } from "../lib/site";
+import CmsImage from "../components/CmsImage.astro";
+import Icon from "../components/Icon.astro";
+import RichText from "../components/RichText.astro";
+import ContactBanner from "../components/ContactBanner.astro";
+
+export const getStaticPaths = (async () => {
+  const { pages } = await getSiteContent();
+  return pages.filter((page) => page.href !== "/").map((page) => ({
+    params: { path: page.href.slice(1) }, props: { page, pages },
+  }));
+}) satisfies GetStaticPaths;
+interface Props { page: Page; pages: Page[] }
+const { page, pages } = Astro.props;
+const { slug } = page;
+const isPatients = slug === "informatie-voor-patienten";
+  const isReferrers = slug === "informatie-voor-verwijzers";
+  const isContact = slug === "contact";
+  const faq = isPatients ? faqSections(page.content) : null;
+---
+<Layout title={page.title} description={plainText(page.content).slice(0, 160)} canonical={page.href}>
+<main id="main">
+<>
+      <section class="page-heading">
+        <div class="container">
+          <nav class="breadcrumb" aria-label="Broodkruimelpad">
+            <a href="/">Home</a>
+            <span aria-hidden="true">/</span>
+            <span>{page.title}</span>
+          </nav>
+          <h1>{page.title}</h1>
+        </div>
+      </section>
+      <div class="container content-layout">
+        <article class="page-article">
+          {page.image && (
+            <CmsImage
+              image={page.image}
+              class="page-cover"
+              preload
+            />
+          )}
+          {faq && faq.questions.length ? (
+            <>
+              <RichText nodes={faq.introduction} />
+              <div class="faq-list">
+                {faq.questions.map(({ question, answer }) => (
+                  <details>
+                    <summary>
+                      {question}
+                      <Icon name="plus" />
+                    </summary>
+                    <RichText nodes={answer} />
+                  </details>
+                ))}
+              </div>
+              <RichText nodes={faq.remainder} />
+            </>
+          ) : (
+            <RichText nodes={page.content} />
+          )}
+        </article>
+        <aside
+          class="page-sidebar"
+          aria-label="Contact en praktische informatie"
+        >
+          <div class="sidebar-panel">
+            <Icon name={isReferrers ? "people" : isContact ? "pin" : "heart"} />
+            <h2>
+              {isReferrers
+                ? "Een patiënt aanmelden"
+                : isContact
+                  ? "Van harte welkom"
+                  : "We denken met u mee"}
+            </h2>
+            <p>
+              {isReferrers
+                ? "Neem contact op om de beschikbaarheid en mogelijkheden te bespreken."
+                : isContact
+                  ? `${site.address}, ${site.city}`
+                  : "Heeft u vragen over de zorg of uw verblijf? Bel ons gerust."}
+            </p>
+            <a href={site.phoneHref} class="sidebar-phone">
+              <Icon name="phone" />
+              {site.phone}
+            </a>
+            <a
+              class="button button-primary"
+              href={`mailto:${isReferrers ? site.referralEmail : site.email}`}
+            >
+              <Icon name="mail" />
+              {isReferrers ? "E-mail voor aanmelding" : "Stuur een e-mail"}
+            </a>
+            {isContact && (
+              <a
+                class="text-link"
+                href="https://www.google.com/maps/dir/?api=1&destination=Mamelisserweg+9a+6294NH+Vijlen"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Plan uw route <Icon name="arrow" />
+                <span class="visually-hidden">
+                  (opent in een nieuw tabblad)
+                </span>
+              </a>
+            )}
+          </div>
+          <div class="sidebar-links">
+            <h2>Ook handig om te weten</h2>
+            {pages.filter((p) => p.id !== page.id && ["eerstelijnsverblijf", "respijtzorg", "informatie-voor-patienten", "informatie-voor-verwijzers"].includes(p.slug))
+              .map((p) => (
+                <a href={p.href}>
+                  {p.title}
+                  <Icon name="arrow" />
+                </a>
+              ))}
+          </div>
+        </aside>
+      </div>
+      <ContactBanner />
+    </>
+</main>
+</Layout>

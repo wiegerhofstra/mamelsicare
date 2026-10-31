@@ -1,0 +1,29 @@
+---
+import { getSiteContent } from "../lib/cms/data";
+const { pages } = await getSiteContent();
+const contact = pages.find((page) => page.slug === "contact");
+import { site } from "../lib/site";
+import Icon from "./Icon.astro";
+
+---
+<section class="contact-banner" aria-labelledby="contact-heading">
+      <div class="container contact-banner-inner">
+        <div>
+          <h2 id="contact-heading">We helpen u graag verder.</h2>
+          <p>
+            Een vraag over uw verblijf of een patiënt aanmelden?
+            <br />
+            Neem gerust contact met ons op.
+          </p>
+        </div>
+        <div class="contact-banner-actions">
+          <a class="button button-white" href={site.phoneHref}>
+            <Icon name="phone" />
+            {site.phone}
+          </a>
+          {contact && <a class="text-link" href={contact.href}>
+            Alle contactgegevens <Icon name="arrow" />
+          </a>}
+        </div>
+      </div>
+    </section>

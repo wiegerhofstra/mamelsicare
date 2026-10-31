@@ -1,0 +1,29 @@
+---
+import CmsImage from "./CmsImage.astro";
+import Icon from "./Icon.astro";
+import type { Page } from "../lib/cms/content";
+interface Props { page: Page }
+const { page } = Astro.props;
+const careDescriptions:Record<string, string> = {
+  eerstelijnsverblijf:
+    "Tijdelijk de verzorging en begeleiding die u nodig heeft, met uw herstel en terugkeer naar huis voorop.",
+  respijtzorg:
+    "Vertrouwde zorg voor uw naaste, zodat u als mantelzorger even tijd voor uzelf heeft.",
+};
+---
+<a href={page.href} class="care-card">
+      {page.image && (
+        <div class="care-image">
+          <CmsImage image={page.image} />
+        </div>
+      )}
+      <div class="care-card-body">
+        <div>
+          <h3>{page.title}</h3>
+          <p>{careDescriptions[page.slug]}</p>
+        </div>
+        <span class="round-arrow">
+          <Icon name="arrow" />
+        </span>
+      </div>
+    </a>

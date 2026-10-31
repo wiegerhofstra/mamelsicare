@@ -1,0 +1,34 @@
+---
+import { site } from "../lib/site";
+import Icon from "./Icon.astro";
+import { getSiteContent } from "../lib/cms/data";
+import Navigation from "./Navigation.astro";
+const { navigation } = await getSiteContent();
+---
+<header class="site-header">
+      <div class="utility-bar">
+        <div class="container utility-inner">
+          <span>Kleinschalige zorg in het Limburgse heuvelland</span>
+          <a href={site.phoneHref}>
+            <Icon name="phone" />
+            {site.phone}
+          </a>
+        </div>
+      </div>
+      <div class="container header-inner">
+        <a
+          class="brand"
+          href="/"
+          aria-label="Mamelis Care — naar de homepage"
+        >
+          <img
+            src="/logo.svg"
+            width={200}
+            height={91}
+            alt="Mamelis Care"
+            fetchpriority="high"
+          />
+        </a>
+        <Navigation items={navigation} />
+      </div>
+    </header>

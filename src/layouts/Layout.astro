@@ -1,0 +1,39 @@
+---
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import { site } from "../lib/site";
+import "@fontsource-variable/figtree";
+import "../styles/global.css";
+interface Props { title?: string; description?: string; canonical?: string; noindex?: boolean }
+const {
+  title,
+  description = "Kleinschalige, persoonlijke zorg in Vijlen. Ontdek eerstelijnsverblijf en respijtzorg bij Mamelis Care, voor patiënten, naasten en verwijzers.",
+  canonical = "/",
+  noindex = false,
+} = Astro.props;
+const fullTitle = title ? `${title} | Mamelis Care` : "Mamelis Care | Persoonlijke zorg in Vijlen";
+const url = new URL(canonical, Astro.site);
+---
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={url} />}
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:locale" content="nl_NL" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    {!noindex && <meta property="og:url" content={url} />}
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Ga naar de inhoud</a>
+    <Header />
+    <slot />
+    <Footer />
+  </body>
+</html>

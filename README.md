@@ -1,77 +1,100 @@
 # Mamelis Care
 
-Dutch public website for patients, families and referring healthcare professionals. Built with Next.js 16.4 App Router, React Server Components and Cache Components. The published CMS pages and photographs are used directly; the CMS export is retained in `cms-mameliscare-integration/` as reference material.
+Dutch public website for patients, families and referring healthcare professionals. Astro generates the entire site as HTML at build time. Coolify serves `dist/` using Nginx; visitors do not need an application server or React runtime.
 
 ## Local development
 
-Use Node.js 22.18+ (or Node.js 24+) and npm.
+Use Node.js 24 LTS (minimum supported: 22.23.4) and npm.
 
 ```sh
 npm ci
 cp .env.example .env.local
-# Fill in the server-only credentials.
+# Fill in the private CMS credentials; keep an existing .env.local if configured.
 npm run dev
 ```
 
-Open http://localhost:3000. `npm run build` creates the production build; `npm start` serves it. CMS access is required at build time to prerender the published pages.
+Open http://localhost:3000. Astro reads `.env.local` automatically. Development requests fetch current CMS content; the production build shares one in-memory result and has no persistent content cache.
 
 ```sh
 npm run lint
 npm test
 npm run build
+npm run preview
 ```
 
-The tests cover untrusted CMS fields, safe links, bounded rich-text normalization, FAQ grouping and webhook authentication.
+`build` runs Astro/TypeScript checks and creates `dist/`. `preview` and `start` serve that output for local verification only. CMS access is required for building, not for serving the resulting HTML.
+
+Browser checks run against the production build:
+
+```sh
+npx playwright install chromium
+npm run test:e2e
+```
+
+Alternatively set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to an installed Chromium path. Tests cover the exported CMS fixtures, pagination, nested paths, duplicate routes, missing pages, failed CMS requests, safe rich text, metadata, internal links, mobile navigation, FAQ keyboard behavior, images and navigation without JavaScript.
 
 ## CMS integration
 
-Required server variables:
+The current contract is [docs/cms/INTEGRATION.md](docs/cms/INTEGRATION.md). Refresh it with `npm run cms:docs`; the existing `update_cms_documentation` alias also works. The generated docs are kept intact. The older `cms-mameliscare-integration/` directory is historical reference only and is excluded from the app's checks; its expiring-media and Next.js revalidation examples no longer apply.
 
-- `CMS_URL`: CMS origin, currently `https://cms.fourd.nl`.
-- `CMS_TENANT_SLUG`: `mameliscare`.
-- `CMS_ACCESS_TOKEN`: tenant-scoped delivery token. Never expose it using `NEXT_PUBLIC_`.
-- `CMS_REVALIDATION_SECRET`: same bearer secret configured in the CMS revalidation settings.
-- `SITE_URL`: final public origin, used for canonical links and sitemap. Defaults to `https://www.mameliscare.nl`.
-- `CMS_MENU_NAME`: optional menu internal name; defaults to `Top menu`.
+Set these private build-time variables:
 
-`lib/cms/client.ts`, `types.ts` and `revalidation.ts` originate from the export. `lib/cms/data.ts` adds server-only cached queries; `content.ts` validates and normalizes the delivered values. The React rich-text renderer escapes text and explicitly supports the editor's paragraphs, headings, lists, marks, media, tables, quotes and code. Unknown nodes retain their children, unsafe links become text, and missing optional fields are tolerated.
+| Variable | Value |
+| --- | --- |
+| `CMS_URL` | `https://cms.fourd.nl` |
+| `CMS_TENANT_SLUG` | `mameliscare` |
+| `CMS_ACCESS_TOKEN` | Tenant delivery token with `content:read` |
+| `CMS_MENU_NAME` | Optional; defaults to `Top menu` |
+| `SITE_URL` | Public origin; defaults to `https://www.mameliscare.nl` |
 
-The CMS currently calls its only locale `en`, but the entries are written in Dutch. Requests use the configured default CMS locale; the website correctly declares `lang="nl"`. Do not send `locale=nl` until that locale exists in the CMS.
+Never prefix credentials with `PUBLIC_`. Remove the obsolete `CMS_REVALIDATION_SECRET` from deployment settings. The Coolify deploy token belongs in the CMS, not in this site's environment.
 
-### Publishing and refresh
+The CMS's default locale is currently `en`, but its entries are written in Dutch. Requests use that default, and generated HTML declares `lang="nl"`. Additional languages need deliberate routing and locale handling.
 
-All CMS content uses the `cms` cache tag. It becomes eligible for background refresh after 60 seconds, on the next visit. To make a published change available on the next request immediately, configure this endpoint in **CMS Settings → Revalidation**:
+`src/lib/cms/client.ts`, `types.ts` and `rich-text.ts` originate from the updated export. Application changes add stricter URL/dimension validation, bounded normalization and the existing table styling. Reconcile these changes when updating the exported helpers; do not overwrite them blindly.
 
-```text
-POST https://<public-domain>/api/revalidate
-Authorization: Bearer <CMS_REVALIDATION_SECRET>
-```
+- `src/lib/cms/data.ts` fetches only in the build/dev server. Delivery errors stop the build, with status/code/request ID reported without credentials.
+- `site-content.ts` paginates published pages and menus, preserves navigation order and resolves menu-only child entries. Missing homepage content, invalid routes and duplicate URLs fail the build.
+- Routes, menus, canonical links and sitemap entries use full `entry.url` paths. `/home` maps to `/`; other nested paths are generated by `src/pages/[...path].astro`.
+- Cover images use durable `asset.url` values directly. Rich-text downloads use `downloadUrl`. There is no local media proxy or image optimizer. Browser caching remains controlled by the CMS so media deletion and capability revocation can take effect. Rebuild after signing-key rotation.
+- Rich text is escaped and rendered at build time. Unsafe links become text; missing media is omitted. Patient questions become native accessible disclosure panels.
 
-The endpoint is implemented and authenticated. Register the final HTTPS deployment URL in the CMS. Publishing alone does not send this webhook; use the CMS **Revalidate** button or rely on the timed refresh. The webhook invalidates all CMS page/navigation/sitemap caches without synchronously rebuilding the site.
+## Deploy to Coolify
 
-### Pages and images
+Use a **Git/source-built application**. Configure Nixpacks with **Is it a static site?** enabled, so it builds the app and copies the published directory into Nginx.
 
-- CMS page `home` appears at `/`; `/home` redirects to `/`.
-- Other pages render at `/<slug>` and receive page-specific metadata. Newly published slugs work without redeployment.
-- The `Top menu` component order controls navigation. WNT remains available through the footer.
-- Patient questions ending in `?` become native, keyboard-accessible disclosure panels. Answers and visiting hours remain CMS content.
-- Cover images and rich-text media use permanent `/media/<asset-id>` URLs. Signed storage URLs are stripped before content is cached. The media route fetches a fresh signed URL, streams the bytes, and caches immutable assets by ID. Raster images use Next.js image optimization; other files download as attachments.
-- A deleted or invalid media ID returns 404; CMS delivery errors are not mistaken for a missing page.
+| Setting | Value |
+| --- | --- |
+| Base directory | `/` |
+| Install command | `npm ci --include=dev` |
+| Build command | `npm run build` |
+| Publish directory | `/dist` |
+| Build variable | `NIXPACKS_NODE_VERSION=24` |
+| Web server | Nginx, port 80 |
 
-## Content ownership
+Set the CMS variables above as available during the build, and set `SITE_URL` to the final HTTPS origin. Build containers must be able to reach the CMS. Use full source rebuilds without a persistent content cache.
 
-All main page text, FAQs, visiting hours, menu order, and photographs are edited in the CMS. The homepage's short display headings, navigation labels, audience links and care summaries are presentation copy in `app/page.tsx` and `components/`.
+Coolify's standalone **Static** build pack packages already-built files and does not run `npm run build`; use the source builder's static-site setting instead. See [Coolify's Nixpacks guide](https://coolify.io/docs/applications/builds/nixpacks/overview) and [Static build documentation](https://coolify.io/docs/applications/builds/static).
 
-The exported schema has no structured site-settings model or image alt-text field. Shared contact details and address, verified against the published contact page, are centralized in `lib/site.ts`; update them there if they change. Add a CMS site-settings model to make these independently editable. Contextual homepage image descriptions are in code, and decorative images have empty alt text.
+Use [deploy/nginx.conf](deploy/nginx.conf) in Coolify's Nginx configuration editor. Preserve the generated `listen` and `root` values if your image uses different ones. It serves Astro's directory output, returns the custom `404.html` with HTTP 404, redirects `/home` and trailing slashes, and caches hashed assets. Do not configure an SPA fallback to `index.html`. Save and redeploy to apply the configuration.
 
-The CMS currently has WNT year labels without downloadable documents. They render as text; add document assets/links to that page when available. Privacy and policy statements are requested by email, as described in the CMS.
+Astro emits a meta-refresh fallback for `/home` in the static files. The supplied Nginx config makes it a real HTTP 308 redirect in production. The delivery API cannot enumerate historical CMS redirects; add any known old paths to Nginx or Astro configuration explicitly.
 
-## Design and accessibility
+### Connect CMS rebuilds
 
-The supplied logo sets the turquoise/slate palette. Figtree is self-hosted by `next/font`; no Google font requests occur in the visitor's browser. The site includes mobile navigation, visible keyboard focus, a skip link, reduced-motion support, native FAQ disclosures, and direct phone/email actions. No analytics, contact-form storage, or embedded third-party maps are added.
+1. Deploy once from source and verify the live site.
+2. Enable Coolify API access if needed. Create a token with `deploy` permission and copy this application's **Deploy Webhook (auth required)** from its Webhooks tab. Use a resource webhook for one application UUID.
+3. In CMS **Settings → Tenants**, select **Astro**. In **Settings → Website**, save the application webhook and deploy token. The CMS stores the token and triggers Coolify with `force=true` so unchanged Git sources still fetch fresh CMS content.
+4. After publishing, editing, moving, unpublishing or deleting content, click **Rebuild** in the CMS. Publishing does not automatically rebuild. Follow the queued deployment in Coolify until it succeeds.
 
-## Deployment
+There is no `/api/revalidate`, timed refresh or ISR. Public HTML changes when a successful build is deployed; a failed build leaves the previous site live. On a CMS timeout, inspect Coolify before retrying because the deployment may already be queued. See [Coolify deploy webhooks](https://coolify.io/docs/core/automation/deploy-webhooks).
 
-Deploy to a platform supporting the Next.js server runtime; static export cannot provide the media and revalidation routes. Set the server variables before building. Register the public revalidation endpoint in the CMS and verify it there after deployment.
+After deployment, verify `/`, a CMS page, a CMS image, `/sitemap.xml`, `/robots.txt`, the HTTP 308 from `/home`, and HTTP 404 for an unknown path. Publish a harmless CMS edit, click Rebuild, and confirm the deployed HTML updates. These production checks require the actual Coolify application; this repository does not configure it remotely.
 
-On multiple server instances, configure a shared Next.js cache handler so webhook invalidation reaches every instance. The default cache is appropriate for a single long-running server; the 60-second refresh also bounds ordinary content staleness.
+## Content and design
+
+The existing layout, turquoise/slate palette, Dutch copy, mobile menu, keyboard focus, skip link, reduced-motion support, phone/email actions and FAQ disclosures are retained. Figtree is bundled locally through Fontsource. Only the mobile navigation uses a small browser script; content and links work without JavaScript.
+
+CMS editors own main page content, FAQs, visiting hours, menu order and photos. Short homepage headings, audience links and care summaries remain presentation copy in `src/pages/index.astro` and `src/components/`. Shared contact details are in `src/lib/site.ts` because the CMS schema has no site-settings model. Image descriptions remain contextual code because the CMS has no alt-text field.
+
+WNT year labels remain text until document links are added in the CMS. Privacy and policy statements remain available by email. No analytics, forms or embedded maps have been added.

@@ -1,0 +1,49 @@
+---
+import type { NavItem } from "../lib/cms/content";
+interface Props { items: NavItem[] }
+const { items } = Astro.props;
+const pathname = Astro.url.pathname.replace(/\/$/, "") || "/";
+const shortLabels: Record<string, string> = {
+  "Informatie voor patiënten": "Voor patiënten & naasten",
+  "Informatie voor verwijzers": "Voor verwijzers",
+};
+---
+<div class="navigation">
+  <button id="menu-toggle" type="button" class="menu-toggle" aria-expanded="false" aria-controls="main-navigation" hidden>
+    <span data-menu-label>Menu</span>
+    <span class="menu-lines" aria-hidden="true"><i></i><i></i></span>
+  </button>
+  <nav id="main-navigation" class="main-navigation" aria-label="Hoofdnavigatie">
+    {items.filter((item) => item.href !== "/").map((item) => (
+      <a href={item.href} aria-current={pathname === item.href ? "page" : undefined}>
+        {shortLabels[item.title] ?? item.title}
+      </a>
+    ))}
+  </nav>
+</div>
+<script>
+  const navigation = document.querySelector<HTMLElement>(".navigation");
+  const toggle = document.querySelector<HTMLButtonElement>("#menu-toggle");
+  const menu = document.querySelector<HTMLElement>("#main-navigation");
+  if (navigation && toggle && menu) {
+    navigation.classList.add("is-enhanced");
+    toggle.hidden = false;
+    const setOpen = (open: boolean) => {
+      toggle.setAttribute("aria-expanded", String(open));
+      toggle.querySelector("[data-menu-label]")!.textContent = open ? "Sluiten" : "Menu";
+      toggle.querySelector(".menu-lines")!.classList.toggle("is-open", open);
+      menu.classList.toggle("is-open", open);
+    };
+    toggle.addEventListener("click", () => setOpen(toggle.getAttribute("aria-expanded") !== "true"));
+    navigation.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") { setOpen(false); toggle.focus(); }
+    });
+    menu.addEventListener("click", (event) => {
+      if ((event.target as Element).closest("a")) setOpen(false);
+    });
+    document.addEventListener("click", (event) => {
+      if (!navigation.contains(event.target as Node)) setOpen(false);
+    });
+    window.matchMedia("(min-width: 951px)").addEventListener("change", () => setOpen(false));
+  }
+</script>

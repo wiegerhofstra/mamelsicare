@@ -1,0 +1,356 @@
+{
+  "note": "Synthetic fixtures only. Each byModel item is a separate endpoint response, not a cross-model collection.",
+  "byModel": {
+    "menu": {
+      "compact": {
+        "data": [
+          {
+            "id": "8772fe8b-222c-4d01-8126-66ae2440b797",
+            "modelId": "1ae7796c-ac8d-4360-b643-acd145388be7",
+            "pageParentId": null,
+            "url": null,
+            "status": "published",
+            "data": {
+              "internal_name": "Example text",
+              "items": [
+                {
+                  "id": "f7175cd3-2c6e-40d0-80a4-b58cb54082d7",
+                  "modelId": "bf45584e-7868-4b02-b431-9d2f3604d6c1"
+                }
+              ]
+            },
+            "publishedAt": "2026-01-01T12:00:00.000Z",
+            "createdAt": "2026-01-01T11:00:00.000Z",
+            "updatedAt": "2026-01-01T12:00:00.000Z"
+          }
+        ],
+        "meta": {
+          "nextCursor": null,
+          "maxDepth": 1,
+          "locale": "en"
+        }
+      },
+      "expanded": {
+        "data": {
+          "id": "8772fe8b-222c-4d01-8126-66ae2440b797",
+          "modelId": "1ae7796c-ac8d-4360-b643-acd145388be7",
+          "pageParentId": null,
+          "url": null,
+          "status": "published",
+          "data": {
+            "internal_name": "Example text",
+            "items": [
+              {
+                "id": "f7175cd3-2c6e-40d0-80a4-b58cb54082d7",
+                "modelId": "bf45584e-7868-4b02-b431-9d2f3604d6c1",
+                "pageParentId": null,
+                "url": "/example-page",
+                "status": "published",
+                "data": {
+                  "title": "Example text",
+                  "slug": "example-page",
+                  "content": {
+                    "type": "doc",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Synthetic example text",
+                            "marks": [
+                              {
+                                "type": "bold"
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "asset",
+                        "attrs": {
+                          "assetId": "d59386e0-ae43-4e29-8fbe-0ebcdb954b75",
+                          "asset": {
+                            "id": "d59386e0-ae43-4e29-8fbe-0ebcdb954b75",
+                            "originalName": "example.jpg",
+                            "mimeType": "image/jpeg",
+                            "sizeBytes": 1024,
+                            "imageWidth": 800,
+                            "imageHeight": 600,
+                            "url": "https://example.invalid/synthetic-image.jpg",
+                            "downloadUrl": "https://example.invalid/media/synthetic-image"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "cover_image": {
+                    "id": "d59386e0-ae43-4e29-8fbe-0ebcdb954b75",
+                    "originalName": "example.jpg",
+                    "mimeType": "image/jpeg",
+                    "sizeBytes": 1024,
+                    "imageWidth": 800,
+                    "imageHeight": 600,
+                    "url": "https://example.invalid/synthetic-image.jpg",
+                    "downloadUrl": "https://example.invalid/media/synthetic-image"
+                  }
+                },
+                "publishedAt": "2026-01-01T12:00:00.000Z",
+                "createdAt": "2026-01-01T11:00:00.000Z",
+                "updatedAt": "2026-01-01T12:00:00.000Z"
+              }
+            ]
+          },
+          "publishedAt": "2026-01-01T12:00:00.000Z",
+          "createdAt": "2026-01-01T11:00:00.000Z",
+          "updatedAt": "2026-01-01T12:00:00.000Z"
+        },
+        "meta": {
+          "maxDepth": 2,
+          "locale": "en"
+        }
+      },
+      "missingFields": {
+        "data": {
+          "id": "8772fe8b-222c-4d01-8126-66ae2440b797",
+          "modelId": "1ae7796c-ac8d-4360-b643-acd145388be7",
+          "pageParentId": null,
+          "url": null,
+          "status": "published",
+          "data": {},
+          "publishedAt": "2026-01-01T12:00:00.000Z",
+          "createdAt": "2026-01-01T11:00:00.000Z",
+          "updatedAt": "2026-01-01T12:00:00.000Z"
+        },
+        "meta": {
+          "maxDepth": 1,
+          "locale": "en"
+        }
+      },
+      "unavailableRelations": {
+        "data": {
+          "id": "8772fe8b-222c-4d01-8126-66ae2440b797",
+          "modelId": "1ae7796c-ac8d-4360-b643-acd145388be7",
+          "pageParentId": null,
+          "url": null,
+          "status": "published",
+          "data": {
+            "items": []
+          },
+          "publishedAt": "2026-01-01T12:00:00.000Z",
+          "createdAt": "2026-01-01T11:00:00.000Z",
+          "updatedAt": "2026-01-01T12:00:00.000Z"
+        },
+        "meta": {
+          "maxDepth": 1,
+          "locale": "en"
+        }
+      }
+    },
+    "page": {
+      "compact": {
+        "data": [
+          {
+            "id": "f7175cd3-2c6e-40d0-80a4-b58cb54082d7",
+            "modelId": "bf45584e-7868-4b02-b431-9d2f3604d6c1",
+            "pageParentId": null,
+            "url": "/example-page",
+            "status": "published",
+            "data": {
+              "title": "Example text",
+              "slug": "example-page",
+              "content": {
+                "type": "doc",
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [
+                      {
+                        "type": "text",
+                        "text": "Synthetic example text",
+                        "marks": [
+                          {
+                            "type": "bold"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "asset",
+                    "attrs": {
+                      "assetId": "d59386e0-ae43-4e29-8fbe-0ebcdb954b75",
+                      "asset": {
+                        "id": "d59386e0-ae43-4e29-8fbe-0ebcdb954b75",
+                        "originalName": "example.jpg",
+                        "mimeType": "image/jpeg",
+                        "sizeBytes": 1024,
+                        "imageWidth": 800,
+                        "imageHeight": 600,
+                        "url": "https://example.invalid/synthetic-image.jpg",
+                        "downloadUrl": "https://example.invalid/media/synthetic-image"
+                      }
+                    }
+                  }
+                ]
+              },
+              "cover_image": {
+                "id": "d59386e0-ae43-4e29-8fbe-0ebcdb954b75",
+                "originalName": "example.jpg",
+                "mimeType": "image/jpeg",
+                "sizeBytes": 1024,
+                "imageWidth": 800,
+                "imageHeight": 600,
+                "url": "https://example.invalid/synthetic-image.jpg",
+                "downloadUrl": "https://example.invalid/media/synthetic-image"
+              }
+            },
+            "publishedAt": "2026-01-01T12:00:00.000Z",
+            "createdAt": "2026-01-01T11:00:00.000Z",
+            "updatedAt": "2026-01-01T12:00:00.000Z"
+          }
+        ],
+        "meta": {
+          "nextCursor": null,
+          "maxDepth": 1,
+          "locale": "en"
+        }
+      },
+      "expanded": {
+        "data": {
+          "id": "f7175cd3-2c6e-40d0-80a4-b58cb54082d7",
+          "modelId": "bf45584e-7868-4b02-b431-9d2f3604d6c1",
+          "pageParentId": null,
+          "url": "/example-page",
+          "status": "published",
+          "data": {
+            "title": "Example text",
+            "slug": "example-page",
+            "content": {
+              "type": "doc",
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "Synthetic example text",
+                      "marks": [
+                        {
+                          "type": "bold"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "asset",
+                  "attrs": {
+                    "assetId": "d59386e0-ae43-4e29-8fbe-0ebcdb954b75",
+                    "asset": {
+                      "id": "d59386e0-ae43-4e29-8fbe-0ebcdb954b75",
+                      "originalName": "example.jpg",
+                      "mimeType": "image/jpeg",
+                      "sizeBytes": 1024,
+                      "imageWidth": 800,
+                      "imageHeight": 600,
+                      "url": "https://example.invalid/synthetic-image.jpg",
+                      "downloadUrl": "https://example.invalid/media/synthetic-image"
+                    }
+                  }
+                }
+              ]
+            },
+            "cover_image": {
+              "id": "d59386e0-ae43-4e29-8fbe-0ebcdb954b75",
+              "originalName": "example.jpg",
+              "mimeType": "image/jpeg",
+              "sizeBytes": 1024,
+              "imageWidth": 800,
+              "imageHeight": 600,
+              "url": "https://example.invalid/synthetic-image.jpg",
+              "downloadUrl": "https://example.invalid/media/synthetic-image"
+            }
+          },
+          "publishedAt": "2026-01-01T12:00:00.000Z",
+          "createdAt": "2026-01-01T11:00:00.000Z",
+          "updatedAt": "2026-01-01T12:00:00.000Z"
+        },
+        "meta": {
+          "maxDepth": 2,
+          "locale": "en"
+        }
+      },
+      "missingFields": {
+        "data": {
+          "id": "f7175cd3-2c6e-40d0-80a4-b58cb54082d7",
+          "modelId": "bf45584e-7868-4b02-b431-9d2f3604d6c1",
+          "pageParentId": null,
+          "url": "/example-page",
+          "status": "published",
+          "data": {},
+          "publishedAt": "2026-01-01T12:00:00.000Z",
+          "createdAt": "2026-01-01T11:00:00.000Z",
+          "updatedAt": "2026-01-01T12:00:00.000Z"
+        },
+        "meta": {
+          "maxDepth": 1,
+          "locale": "en"
+        }
+      },
+      "unavailableRelations": {
+        "data": {
+          "id": "f7175cd3-2c6e-40d0-80a4-b58cb54082d7",
+          "modelId": "bf45584e-7868-4b02-b431-9d2f3604d6c1",
+          "pageParentId": null,
+          "url": "/example-page",
+          "status": "published",
+          "data": {
+            "cover_image": null
+          },
+          "publishedAt": "2026-01-01T12:00:00.000Z",
+          "createdAt": "2026-01-01T11:00:00.000Z",
+          "updatedAt": "2026-01-01T12:00:00.000Z"
+        },
+        "meta": {
+          "maxDepth": 1,
+          "locale": "en"
+        }
+      }
+    }
+  },
+  "empty": {
+    "data": [],
+    "meta": {
+      "nextCursor": null,
+      "maxDepth": 1,
+      "locale": "en"
+    }
+  },
+  "asset": {
+    "data": {
+      "id": "d59386e0-ae43-4e29-8fbe-0ebcdb954b75",
+      "originalName": "example.jpg",
+      "mimeType": "image/jpeg",
+      "sizeBytes": 1024,
+      "imageWidth": 800,
+      "imageHeight": 600,
+      "url": "https://example.invalid/synthetic-image.jpg",
+      "downloadUrl": "https://example.invalid/media/synthetic-image"
+    }
+  },
+  "missingRichTextAsset": {
+    "type": "asset",
+    "attrs": {
+      "assetId": "ffa63583-dfa6-406b-87d2-84b86b0d693a",
+      "asset": null
+    }
+  },
+  "error": {
+    "error": {
+      "code": "NOT_FOUND",
+      "message": "Published entry was not found",
+      "requestId": "synthetic-request-id"
+    }
+  }
+}

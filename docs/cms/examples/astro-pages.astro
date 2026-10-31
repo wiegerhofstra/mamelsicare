@@ -1,0 +1,40 @@
+---
+// src/pages/[...path].astro; copy generated helpers into src/lib/cms/.
+import type { GetStaticPaths } from "astro";
+import { createCmsClient } from "../lib/cms/client";
+import type { DeliveryEntry } from "../lib/cms/types";
+
+export const getStaticPaths = (async () => {
+  const cms = createCmsClient({
+    origin: import.meta.env.CMS_URL ?? "https://cms.fourd.nl",
+    tenantSlug: import.meta.env.CMS_TENANT_SLUG ?? "mameliscare",
+    token: import.meta.env.CMS_ACCESS_TOKEN ?? "",
+  });
+  // The export inventory includes all models, unlike the capped listModels API.
+  const models: string[] = ["page"];
+  const paths: { params: { path: string | undefined }; props: { entry: DeliveryEntry; modelSlug: string } }[] = [];
+  const seen = new Set<string>();
+  for (const modelSlug of models) {
+    for await (const entry of cms.iterateEntries(modelSlug, { limit: 100, maxDepth: 2, locale: "en" })) {
+      if (!entry.url) continue;
+      const path = entry.url === "/" ? undefined : entry.url.slice(1);
+      if (seen.has(entry.url)) throw new Error("Duplicate CMS route: " + entry.url);
+      seen.add(entry.url);
+      paths.push({ params: { path }, props: { entry, modelSlug } });
+    }
+  }
+  // Errors propagate: never deploy a partial site after a failed CMS request.
+  return paths;
+}) satisfies GetStaticPaths;
+
+interface Props { entry: DeliveryEntry; modelSlug: string }
+const { entry, modelSlug } = Astro.props;
+---
+<html lang="en">
+  <head><meta charset="utf-8" /><title>{modelSlug}</title></head>
+  <body>
+    <!-- Replace with validated, model-specific templates. Astro escapes text. -->
+    <h1>{modelSlug}</h1>
+    <pre>{JSON.stringify(entry.data, null, 2)}</pre>
+  </body>
+</html>

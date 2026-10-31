@@ -1,0 +1,13 @@
+---
+import type { CmsImage } from "../lib/cms/content";
+interface Props {
+  image: CmsImage;
+  alt?: string;
+  class?: string;
+  preload?: boolean;
+}
+const { image, alt = "", class: className, preload = false } = Astro.props;
+---
+<img src={image.url} alt={alt} width={image.width} height={image.height}
+  class={className} loading={preload ? "eager" : "lazy"}
+  fetchpriority={preload ? "high" : "auto"} decoding="async" />

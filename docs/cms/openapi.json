@@ -1,0 +1,2048 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CMS Content API",
+    "version": "1.1.0",
+    "description": "Read-only content delivery. This schema snapshot describes one tenant. Unsupported: writes, draft preview, search, filters other than slug, and custom sorting. Translatable fields resolve per ?locale= with fallback to the default language. Assets have stable URLs backed by the CMS disk cache. Astro fetches content at build time; the CMS queues rebuilds through Coolify. Primitive fields pass through stored JSON; x-cms-editorSchema describes expected editor values, not delivery validation."
+  },
+  "x-cms-schemaHash": "e54f145627dad96019f9e19b23e245d5a2141f66555d19e74dbf527d0cf4bae6",
+  "servers": [
+    {
+      "url": "https://cms.fourd.nl"
+    }
+  ],
+  "paths": {
+    "/api/content/{tenantSlug}/resolve": {
+      "get": {
+        "operationId": "resolvePage",
+        "summary": "Resolve a complete page path",
+        "description": "Returns a published page or a redirect instruction in a 200 JSON envelope. Your website sends the HTTP 308. Old paths resolve directly to the latest URL; unpublished/deleted targets and unknown paths return 404. Locale defaults to the tenant default and is not inferred from the path.",
+        "parameters": [
+          {
+            "name": "tenantSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "mameliscare"
+            },
+            "description": "Must match the tenant associated with the bearer token."
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "maxLength": 2000,
+              "pattern": "^/(?:[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*)?$"
+            },
+            "description": "Full website path, including any language/prefix. No trailing slash except /."
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en"
+              ],
+              "default": "en"
+            },
+            "description": "Language for translatable fields (x-cms-localized). A field without a translation in this language returns the default-language value. Unknown languages return 400."
+          },
+          {
+            "name": "maxDepth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5,
+              "default": 1
+            },
+            "description": "Root counts as depth 1; depth-limited and cyclic components remain compact references."
+          }
+        ],
+        "security": [
+          {
+            "contentToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "const": "page"
+                            },
+                            "modelSlug": {
+                              "type": "string"
+                            },
+                            "entry": {
+                              "anyOf": [
+                                {
+                                  "$ref": "#/components/schemas/Entry_1ae7796cac8d4360b643acd145388be7"
+                                },
+                                {
+                                  "$ref": "#/components/schemas/Entry_bf45584e78684b02b4319d2f3604d6c1"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "modelSlug",
+                            "entry"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "const": "redirect"
+                            },
+                            "location": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "const": 308
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "location",
+                            "status"
+                          ]
+                        }
+                      ]
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "locale": {
+                          "type": "string",
+                          "description": "Language the entries were resolved in."
+                        },
+                        "maxDepth": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "locale",
+                        "maxDepth"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST: invalid query, UUID, cursor, locale or slug filter; expansion limits exceeded.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: missing, malformed, expired, revoked or unknown token.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "schema": {
+                  "const": "Bearer",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN: valid token belongs to a different tenant.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: model, published entry or asset unavailable.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_SERVER_ERROR: unexpected server error.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/content/{tenantSlug}/models": {
+      "get": {
+        "operationId": "listModels",
+        "summary": "List content models",
+        "description": "At most 100 models ordered by name, including archived models. No model pagination. manifest.json contains the full export snapshot. meta lists the tenant's languages.",
+        "parameters": [
+          {
+            "name": "tenantSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "mameliscare"
+            },
+            "description": "Must match the tenant associated with the bearer token."
+          }
+        ],
+        "security": [
+          {
+            "contentToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Model"
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "defaultLocale": {
+                          "type": "string"
+                        },
+                        "locales": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": [
+                        "defaultLocale",
+                        "locales"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST: invalid query, UUID, cursor, locale or slug filter; expansion limits exceeded.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: missing, malformed, expired, revoked or unknown token.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "schema": {
+                  "const": "Bearer",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN: valid token belongs to a different tenant.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: model, published entry or asset unavailable.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_SERVER_ERROR: unexpected server error.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/content/{tenantSlug}/models/{modelSlug}": {
+      "get": {
+        "operationId": "getModel",
+        "summary": "Get a model and its fields",
+        "description": "Fields ordered by position. targetModelIds identifies allowed component models; map IDs to slugs using manifest.json.",
+        "parameters": [
+          {
+            "name": "tenantSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "mameliscare"
+            },
+            "description": "Must match the tenant associated with the bearer token."
+          },
+          {
+            "name": "modelSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "A model slug from model discovery or manifest.json."
+          }
+        ],
+        "security": [
+          {
+            "contentToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/ModelDetail"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST: invalid query, UUID, cursor, locale or slug filter; expansion limits exceeded.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: missing, malformed, expired, revoked or unknown token.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "schema": {
+                  "const": "Bearer",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN: valid token belongs to a different tenant.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: model, published entry or asset unavailable.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_SERVER_ERROR: unexpected server error.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/content/{tenantSlug}/models/{modelSlug}/entries": {
+      "get": {
+        "operationId": "listEntries",
+        "summary": "List published top-level entries",
+        "description": "Published, non-deleted root entries ordered by createdAt descending, then id descending. No snapshot guarantee across pages. Expansion budgets: 500 component references, 200 unique assets; rich text traversal budget 2,000 visited values and nesting depth 100. Exceeding a budget returns 400; lower limit or maxDepth, or simplify the document.",
+        "parameters": [
+          {
+            "name": "tenantSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "mameliscare"
+            },
+            "description": "Must match the tenant associated with the bearer token."
+          },
+          {
+            "name": "modelSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "A model slug from model discovery or manifest.json."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "description": "Maximum entries per page."
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Pass meta.nextCursor unchanged; stop when null."
+          },
+          {
+            "name": "maxDepth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5,
+              "default": 1
+            },
+            "description": "Root counts as depth 1; depth-limited and cyclic components remain compact references."
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en"
+              ],
+              "default": "en"
+            },
+            "description": "Language for translatable fields (x-cms-localized). A field without a translation in this language returns the default-language value. Unknown languages return 400."
+          },
+          {
+            "name": "slug",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "description": "Only entries whose slug field equals this value. Translatable slug fields match the slug in the requested locale, falling back to the default-language slug. Hierarchical routing slugs are only unique among siblings; use resolvePage for website routing. Other slugs are unique only when configured so (config.unique)."
+          },
+          {
+            "name": "slugField",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Key of the slug field to match. Required only when the model has more than one slug field; unknown keys return 400."
+          }
+        ],
+        "security": [
+          {
+            "contentToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "$ref": "#/components/schemas/Entry_1ae7796cac8d4360b643acd145388be7"
+                          },
+                          {
+                            "$ref": "#/components/schemas/Entry_bf45584e78684b02b4319d2f3604d6c1"
+                          }
+                        ]
+                      }
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "nextCursor": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "maxDepth": {
+                          "type": "integer"
+                        },
+                        "locale": {
+                          "type": "string",
+                          "description": "Language the entries were resolved in."
+                        }
+                      },
+                      "required": [
+                        "nextCursor",
+                        "maxDepth"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST: invalid query, UUID, cursor, locale or slug filter; expansion limits exceeded.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: missing, malformed, expired, revoked or unknown token.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "schema": {
+                  "const": "Bearer",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN: valid token belongs to a different tenant.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: model, published entry or asset unavailable.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_SERVER_ERROR: unexpected server error.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/content/{tenantSlug}/assets/{assetId}": {
+      "get": {
+        "operationId": "getAsset",
+        "summary": "Get an asset with a stable media URL",
+        "description": "Returns any ready, non-deleted asset of this tenant with stable url and downloadUrl values. Both serve bytes through the CMS cache and check file access on every request. Store asset IDs as the source of truth; refresh URLs after signing-secret rotation.",
+        "parameters": [
+          {
+            "name": "tenantSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "mameliscare"
+            },
+            "description": "Must match the tenant associated with the bearer token."
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID of a ready asset, as found in entry data (asset fields and rich-text attrs.assetId)."
+          }
+        ],
+        "security": [
+          {
+            "contentToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/Asset"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST: invalid query, UUID, cursor, locale or slug filter; expansion limits exceeded.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: missing, malformed, expired, revoked or unknown token.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "schema": {
+                  "const": "Bearer",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN: valid token belongs to a different tenant.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: model, published entry or asset unavailable.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_SERVER_ERROR: unexpected server error.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/content/{tenantSlug}/models/{modelSlug}/entries/{entryId}": {
+      "get": {
+        "operationId": "getEntry",
+        "summary": "Get one published entry",
+        "description": "Returns a published, non-deleted entry belonging to this model. The same expansion limits as listEntries apply.",
+        "parameters": [
+          {
+            "name": "tenantSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "mameliscare"
+            },
+            "description": "Must match the tenant associated with the bearer token."
+          },
+          {
+            "name": "modelSlug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "A model slug from model discovery or manifest.json."
+          },
+          {
+            "name": "entryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID of the entry. Published child entries can be fetched directly."
+          },
+          {
+            "name": "maxDepth",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 5,
+              "default": 1
+            },
+            "description": "Root counts as depth 1; depth-limited and cyclic components remain compact references."
+          },
+          {
+            "name": "locale",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en"
+              ],
+              "default": "en"
+            },
+            "description": "Language for translatable fields (x-cms-localized). A field without a translation in this language returns the default-language value. Unknown languages return 400."
+          }
+        ],
+        "security": [
+          {
+            "contentToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/Entry_1ae7796cac8d4360b643acd145388be7"
+                        },
+                        {
+                          "$ref": "#/components/schemas/Entry_bf45584e78684b02b4319d2f3604d6c1"
+                        }
+                      ]
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "maxDepth": {
+                          "type": "integer"
+                        },
+                        "locale": {
+                          "type": "string",
+                          "description": "Language the entries were resolved in."
+                        }
+                      },
+                      "required": [
+                        "maxDepth"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data",
+                    "meta"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST: invalid query, UUID, cursor, locale or slug filter; expansion limits exceeded.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED: missing, malformed, expired, revoked or unknown token.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              },
+              "WWW-Authenticate": {
+                "schema": {
+                  "const": "Bearer",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN: valid token belongs to a different tenant.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND: model, published entry or asset unavailable.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_SERVER_ERROR: unexpected server error.",
+            "headers": {
+              "X-Request-Id": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Include this value when reporting errors."
+              },
+              "Cache-Control": {
+                "schema": {
+                  "const": "private, no-store",
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "contentToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Authorization: Bearer cms_at_<secret>. Use only from a trusted server."
+      }
+    },
+    "schemas": {
+      "EntryReference": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id",
+          "modelId"
+        ],
+        "additionalProperties": false
+      },
+      "Asset": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "originalName": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer"
+          },
+          "imageWidth": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "imageHeight": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "downloadUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Stable cached file URL. Anyone with this URL can read this specific file until deletion or signing-secret rotation. Access is rechecked on every request."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Stable cached media URL, identical to downloadUrl. Does not expire on a timer. Access is revoked by deletion or signing-secret rotation."
+          }
+        },
+        "required": [
+          "id",
+          "originalName",
+          "mimeType",
+          "sizeBytes",
+          "imageWidth",
+          "imageHeight",
+          "downloadUrl",
+          "url"
+        ]
+      },
+      "RichTextNode": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RichTextNode"
+            }
+          },
+          "attrs": {
+            "type": "object",
+            "properties": {
+              "assetId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "asset": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/Asset"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "marks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string"
+                },
+                "attrs": {
+                  "type": "object"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            }
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "description": "Expected Tiptap JSON node shape. Raw legacy rich-text values are not validated by delivery. Asset nodes retain attrs.assetId and add attrs.asset (object or null)."
+      },
+      "Entry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pageParentId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "const": "published",
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "publishedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "modelId",
+          "url",
+          "pageParentId",
+          "status",
+          "data",
+          "publishedAt",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "Model": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "pageUrl": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "pattern": {
+                    "type": "string"
+                  },
+                  "slugField": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "hierarchy": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "pattern",
+                  "slugField"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "archived"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "pageUrl",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "Field": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "text",
+              "rich_text",
+              "url",
+              "number",
+              "boolean",
+              "date",
+              "time",
+              "enum",
+              "asset",
+              "component",
+              "slug"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "config": {
+            "type": "object"
+          },
+          "isList": {
+            "type": "boolean"
+          },
+          "isTitle": {
+            "type": "boolean"
+          },
+          "localized": {
+            "type": "boolean"
+          },
+          "targetModelIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "label",
+          "type",
+          "required",
+          "position",
+          "config",
+          "isList",
+          "isTitle",
+          "localized",
+          "targetModelIds"
+        ]
+      },
+      "ModelDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Model"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "fields": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Field"
+                }
+              }
+            },
+            "required": [
+              "fields"
+            ]
+          }
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "BAD_REQUEST",
+                  "UNAUTHORIZED",
+                  "FORBIDDEN",
+                  "NOT_FOUND",
+                  "INTERNAL_SERVER_ERROR"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "requestId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "requestId"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "Entry_1ae7796cac8d4360b643acd145388be7": {
+        "title": "Menu",
+        "x-cms-modelSlug": "menu",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Entry"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "modelId": {
+                "const": "1ae7796c-ac8d-4360-b643-acd145388be7",
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "internal_name": {
+                    "title": "internal Name",
+                    "description": "text field: internal_name",
+                    "x-cms-fieldType": "text",
+                    "x-cms-requiredForPublish": true,
+                    "x-cms-isTitle": true,
+                    "x-cms-isList": false,
+                    "x-cms-localized": false,
+                    "x-cms-config": {},
+                    "x-cms-targetModels": [],
+                    "x-cms-editorSchema": {
+                      "type": "string"
+                    }
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "allOf": [
+                            {
+                              "$ref": "#/components/schemas/EntryReference"
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "modelId": {
+                                  "enum": [
+                                    "bf45584e-7868-4b02-b431-9d2f3604d6c1"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "modelId"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "$ref": "#/components/schemas/Entry_bf45584e78684b02b4319d2f3604d6c1"
+                        }
+                      ]
+                    },
+                    "title": "items",
+                    "description": "component field: items",
+                    "x-cms-fieldType": "component",
+                    "x-cms-requiredForPublish": false,
+                    "x-cms-isTitle": false,
+                    "x-cms-isList": true,
+                    "x-cms-localized": false,
+                    "x-cms-config": {
+                      "isList": true,
+                      "targetModelSlugs": [
+                        "page"
+                      ]
+                    },
+                    "x-cms-targetModels": [
+                      {
+                        "id": "bf45584e-7868-4b02-b431-9d2f3604d6c1",
+                        "slug": "page"
+                      }
+                    ]
+                  }
+                },
+                "required": [],
+                "description": "Fields may be absent after model edits. Unknown/stale keys are retained. Raw fields follow editor intent but delivery does not enforce primitive types or enum membership. Validate before rendering.",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "modelId",
+              "data"
+            ]
+          }
+        ]
+      },
+      "Entry_bf45584e78684b02b4319d2f3604d6c1": {
+        "title": "Page",
+        "x-cms-modelSlug": "page",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Entry"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "modelId": {
+                "const": "bf45584e-7868-4b02-b431-9d2f3604d6c1",
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "title": "Title",
+                    "description": "text field: title",
+                    "x-cms-fieldType": "text",
+                    "x-cms-requiredForPublish": true,
+                    "x-cms-isTitle": true,
+                    "x-cms-isList": false,
+                    "x-cms-localized": false,
+                    "x-cms-config": {},
+                    "x-cms-targetModels": [],
+                    "x-cms-editorSchema": {
+                      "type": "string"
+                    }
+                  },
+                  "slug": {
+                    "title": "slug",
+                    "description": "slug field: slug",
+                    "x-cms-fieldType": "slug",
+                    "x-cms-requiredForPublish": true,
+                    "x-cms-isTitle": false,
+                    "x-cms-isList": false,
+                    "x-cms-localized": false,
+                    "x-cms-config": {
+                      "unique": true
+                    },
+                    "x-cms-targetModels": [],
+                    "x-cms-editorSchema": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9_-]+$"
+                    }
+                  },
+                  "content": {
+                    "title": "Content",
+                    "description": "rich_text field: content",
+                    "x-cms-fieldType": "rich_text",
+                    "x-cms-requiredForPublish": false,
+                    "x-cms-isTitle": false,
+                    "x-cms-isList": false,
+                    "x-cms-localized": false,
+                    "x-cms-config": {
+                      "richText": {
+                        "code": true,
+                        "links": true,
+                        "lists": true,
+                        "media": true,
+                        "quotes": true,
+                        "headings": true
+                      }
+                    },
+                    "x-cms-targetModels": [],
+                    "x-cms-editorSchema": {
+                      "$ref": "#/components/schemas/RichTextNode"
+                    }
+                  },
+                  "cover_image": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/components/schemas/Asset"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "title": "Cover Image",
+                    "description": "asset field: cover_image",
+                    "x-cms-fieldType": "asset",
+                    "x-cms-requiredForPublish": false,
+                    "x-cms-isTitle": false,
+                    "x-cms-isList": false,
+                    "x-cms-localized": false,
+                    "x-cms-config": {
+                      "allowedTypes": [
+                        "image"
+                      ]
+                    },
+                    "x-cms-targetModels": []
+                  }
+                },
+                "required": [],
+                "description": "Fields may be absent after model edits. Unknown/stale keys are retained. Raw fields follow editor intent but delivery does not enforce primitive types or enum membership. Validate before rendering.",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "modelId",
+              "data"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

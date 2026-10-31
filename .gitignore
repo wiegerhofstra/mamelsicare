@@ -13,7 +13,11 @@
 # testing
 /coverage
 
-# next.js
+# Astro
+/.astro/
+/dist/
+
+# Legacy build output
 /.next/
 /out/
 
@@ -40,3 +44,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/playwright-report/
+/test-results/
